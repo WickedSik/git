@@ -173,6 +173,15 @@ class Repo implements Gittable {
     }
 
     /**
+     * @param string $name
+     *
+     * @throws Exception
+     */
+    public function checkoutBranch($name) {
+        $this->exec('git checkout ' . escapeshellarg($name));
+    }
+
+    /**
      * @param string $sha
      * @param string $path
      *
