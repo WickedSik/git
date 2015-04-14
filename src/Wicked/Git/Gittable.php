@@ -1,6 +1,6 @@
 <?php
 
-namespace Git;
+namespace Wicked\Git;
 
 interface Gittable
 {
