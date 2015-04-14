@@ -1,11 +1,15 @@
 {
-    "name": "peej/git",
+    "name": "wickedsik/git",
     "description": "An OO wrapper for Git allowing use of a Git repo as if it were a filesystem or database.",
     "license": "MIT",
     "authors": [
         {
             "name": "Paul James",
             "email": "paul@peej.co.uk"
+        },
+        {
+            "name": "Jurriën Dokter",
+            "email": "jurriendokter@gmail.com"
         }
     ],
     "require-dev": {
@@ -16,7 +20,7 @@
     },
     "autoload": {
         "psr-0": {
-            "Git": "src"
+            "Wicked": "src"
         }
     }
 }
