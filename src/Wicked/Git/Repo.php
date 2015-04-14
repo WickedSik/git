@@ -42,6 +42,11 @@ class Repo implements Gittable
         $this->setBranch($branches[0]);
     }
 
+    public function getCurrentBranch() {
+        $this->detectCurrentBranch();
+        return $this->branch;
+    }
+
     private function exec($command)
     {
         $cwd = getcwd();
@@ -188,7 +193,6 @@ class Repo implements Gittable
             $diff //diff
         );
     }
-
 
     # read
 

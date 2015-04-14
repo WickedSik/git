@@ -3,3 +3,4 @@ composer.lock
 bin
 vendor
 token
+.idea

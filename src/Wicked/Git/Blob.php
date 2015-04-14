@@ -2,24 +2,41 @@
 
 namespace Wicked\Git;
 
+/**
+ * Class Blob
+ *
+ * @package Wicked\Git
+ */
 class Blob
 {
+    /** @var Repo */
     private $repo;
-
+    /** @var Metadata */
     private $metadata;
+    /** @var string */
     private $content;
+    /** @var array */
     private $history = array();
-
+    /** @var string */
     public $sha;
+    /** @var string */
     public $filename;
 
-    public function __construct($repo, $sha, $filename)
+    /**
+     * @param Repo $repo
+     * @param string $sha
+     * @param string $filename
+     */
+    public function __construct(Repo $repo, $sha, $filename)
     {
         $this->repo = $repo;
         $this->sha = $sha;
         $this->filename = $filename;
     }
 
+    /**
+     * @return string
+     */
     public function getContent()
     {
         if (!$this->content) {
@@ -27,7 +44,10 @@ class Blob
         }
         return $this->content;
     }
-    
+
+    /**
+     * @return array
+     */
     public function getHistory()
     {
         if (!$this->history) {
@@ -39,11 +59,19 @@ class Blob
         return $this->history;
     }
 
+    /**
+     * @return string
+     */
     public function __toString()
     {
         return $this->__get('content');
     }
 
+    /**
+     * @param string $key
+     *
+     * @return array|string
+     */
     public function __get($key)
     {
         if ($key == 'content') {

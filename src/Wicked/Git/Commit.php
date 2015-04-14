@@ -2,31 +2,56 @@
 
 namespace Wicked\Git;
 
+/**
+ * Class Commit
+ *
+ * @package Wicked\Git
+ * @member Tree $tree
+ * @member array $files
+ */
 class Commit
 {
+    /** @var Repo */
     private $repo;
-
+    /** @var string */
     public $sha;
+    /** @var Tree */
     private $tree;
+    /** @var Metadata */
     private $metadata;
+    /** @var array */
     private $files;
 
-    public function __construct($repo, $sha)
+    /**
+     * @param Repo $repo
+     * @param $sha
+     */
+    public function __construct(Repo $repo, $sha)
     {
         $this->repo = $repo;
         $this->sha = $repo->dereference($sha);
     }
 
+    /**
+     * @return string
+     */
     public function __toString()
     {
         return $this->sha;
     }
 
-    public function setTree($tree)
+    /**
+     * @param Tree $tree
+     */
+    public function setTree(Tree $tree)
     {
         $this->tree = $tree;
     }
 
+    /**
+     * @param string $name
+     * @param mixed $value
+     */
     public function __set($name, $value)
     {
         switch ($name) {
@@ -36,6 +61,9 @@ class Commit
         }
     }
 
+    /**
+     * @return Tree
+     */
     public function getTree()
     {
         if (!is_a($this->tree, 'Tree')) {
@@ -44,6 +72,9 @@ class Commit
         return $this->tree;
     }
 
+    /**
+     * @return array
+     */
     public function getFiles()
     {
         if (!$this->files) {
@@ -52,6 +83,12 @@ class Commit
         return $this->files;
     }
 
+    /**
+     * @param string $key
+     *
+     * @return mixed
+     * @throws Exception
+     */
     public function getMetadata($key)
     {
         if (!$this->metadata) {
@@ -60,6 +97,11 @@ class Commit
         return $this->metadata->$key;
     }
 
+    /**
+     * @param string $key
+     *
+     * @return array|mixed|Tree
+     */
     public function __get($key)
     {
         switch ($key) {

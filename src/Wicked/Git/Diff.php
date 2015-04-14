@@ -2,10 +2,21 @@
 
 namespace Wicked\Git;
 
+/**
+ * Class Diff
+ *
+ * @package Wicked\Git
+ */
 class Diff implements \ArrayAccess
 {
+    /**
+     * @var array
+     */
     public $diff;
 
+    /**
+     * @param array $diff
+     */
     public function __construct($diff)
     {
         $this->diff = array();
@@ -44,6 +55,10 @@ class Diff implements \ArrayAccess
         }
     }
 
+    /**
+     * @param mixed $offset
+     * @param mixed $value
+     */
     public function offsetSet($offset, $value)
     {
         if (is_null($offset)) {
@@ -53,16 +68,29 @@ class Diff implements \ArrayAccess
         }
     }
 
+    /**
+     * @param mixed $offset
+     *
+     * @return bool
+     */
     public function offsetExists($offset)
     {
         return isset($this->diff[$offset]);
     }
 
+    /**
+     * @param mixed $offset
+     */
     public function offsetUnset($offset)
     {
         unset($this->diff[$offset]);
     }
 
+    /**
+     * @param mixed $offset
+     *
+     * @return null
+     */
     public function offsetGet($offset)
     {
         return isset($this->diff[$offset]) ? $this->diff[$offset] : null;
