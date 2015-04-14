@@ -7,4 +7,5 @@ namespace Wicked\Git;
  *
  * @package Wicked\Git
  */
-class Exception extends \Exception {}
+class Exception extends \Exception {
+}

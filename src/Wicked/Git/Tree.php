@@ -7,8 +7,15 @@ namespace Wicked\Git;
  *
  * @package Wicked\Git
  */
-class Tree implements \Iterator, \ArrayAccess
-{
+class Tree implements \Iterator, \ArrayAccess {
+    /**
+     * @var string
+     */
+    public $sha;
+    /**
+     * @var string
+     */
+    public $filename;
     /**
      * @var Repo
      */
@@ -27,31 +34,29 @@ class Tree implements \Iterator, \ArrayAccess
     private $entriesArray = array();
 
     /**
-     * @var string
-     */
-    public $sha;
-    /**
-     * @var string
-     */
-    public $filename;
-
-    /**
      * @param Repo   $repo
      * @param string $sha
      * @param string $filename
      */
-    public function __construct(Repo $repo, $sha, $filename = '')
-    {
+    public function __construct(Repo $repo, $sha, $filename = '') {
         $this->repo = $repo;
         $this->sha = $sha;
         $this->filename = $filename;
     }
 
     /**
+     * @return array
+     */
+    public function entries() {
+        $this->loadEntries();
+
+        return $this->entries;
+    }
+
+    /**
      *
      */
-    private function loadEntries()
-    {
+    private function loadEntries() {
         if (!$this->entries) {
             $this->entries = $this->repo->loadTree($this->sha, $this->filename);
             $this->entriesArray = array_values($this->entries);
@@ -59,53 +64,41 @@ class Tree implements \Iterator, \ArrayAccess
     }
 
     /**
-     * @return array
-     */
-    public function entries()
-    {
-        $this->loadEntries();
-        return $this->entries;
-    }
-
-    /**
      *
      */
-    public function rewind()
-    {
+    public function rewind() {
         $this->position = 0;
     }
 
     /**
      * @return mixed
      */
-    public function current()
-    {
+    public function current() {
         $this->loadEntries();
+
         return $this->entriesArray[$this->position];
     }
 
     /**
      * @return int
      */
-    public function key()
-    {
+    public function key() {
         return $this->position;
     }
 
     /**
      *
      */
-    public function next()
-    {
+    public function next() {
         ++$this->position;
     }
 
     /**
      * @return bool
      */
-    public function valid()
-    {
+    public function valid() {
         $this->loadEntries();
+
         return isset($this->entriesArray[$this->position]);
     }
 
@@ -113,8 +106,7 @@ class Tree implements \Iterator, \ArrayAccess
      * @param mixed $offset
      * @param mixed $value
      */
-    public function offsetSet($offset, $value)
-    {
+    public function offsetSet($offset, $value) {
         $this->loadEntries();
         if (is_null($offset)) {
             $this->entries[] = $value;
@@ -128,17 +120,16 @@ class Tree implements \Iterator, \ArrayAccess
      *
      * @return bool
      */
-    public function offsetExists($offset)
-    {
+    public function offsetExists($offset) {
         $this->loadEntries();
+
         return isset($this->entries[$offset]);
     }
 
     /**
      * @param mixed $offset
      */
-    public function offsetUnset($offset)
-    {
+    public function offsetUnset($offset) {
         $this->loadEntries();
         unset($this->entries[$offset]);
     }
@@ -148,9 +139,9 @@ class Tree implements \Iterator, \ArrayAccess
      *
      * @return mixed
      */
-    public function offsetGet($offset)
-    {
+    public function offsetGet($offset) {
         $this->loadEntries();
+
         return isset($this->entries[$offset]) ? $this->entries[$offset] : null;
     }
 }

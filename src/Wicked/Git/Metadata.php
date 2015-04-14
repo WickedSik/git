@@ -7,8 +7,11 @@ namespace Wicked\Git;
  *
  * @package Wicked\Git
  */
-class Metadata
-{
+class Metadata {
+    /**
+     *
+     */
+    const LOG_FORMAT = '%H,%P,%aN,%aE,%at,%s';
     /**
      * @var string
      */
@@ -39,26 +42,20 @@ class Metadata
     public $diff;
 
     /**
-     *
-     */
-    const LOG_FORMAT = '%H,%P,%aN,%aE,%at,%s';
-
-    /**
      * @param string $commit
      * @param string $parents
      * @param string $user
      * @param string $email
-     * @param int $date
+     * @param int    $date
      * @param string $message
-     * @param array $diff
+     * @param array  $diff
      */
-    public function __construct($commit, $parents, $user, $email, $date, $message, $diff)
-    {
+    public function __construct($commit, $parents, $user, $email, $date, $message, $diff) {
         $this->commit = $commit;
         $this->parents = $parents;
         $this->user = $user;
         $this->email = $email;
-        $this->date = (int) $date;
+        $this->date = (int)$date;
         $this->message = $message;
         $this->diff = new Diff($diff);
     }

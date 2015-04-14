@@ -2,19 +2,18 @@
 
 namespace Wicked\Git;
 
+    /**
+     * Class HttpClient
+     *
+     * @desc    HTTP client to send/recieve JSON over HTTP requests
+     * @package Wicked\Git
+     */
 /**
  * Class HttpClient
  *
- * @desc HTTP client to send/recieve JSON over HTTP requests
  * @package Wicked\Git
  */
-/**
- * Class HttpClient
- *
- * @package Wicked\Git
- */
-class HttpClient
-{
+class HttpClient {
     /**
      * @var string
      */
@@ -44,8 +43,7 @@ class HttpClient
     /**
      * @param string|null $token
      */
-    function __construct($token = null)
-    {
+    function __construct($token = null) {
         $this->cacheDir = sys_get_temp_dir();
         $this->token = $token;
     }
@@ -53,17 +51,8 @@ class HttpClient
     /**
      * @return string
      */
-    public function getCode()
-    {
+    public function getCode() {
         return $this->responseCode;
-    }
-
-    /**
-     * @return array
-     */
-    public function getHeaders()
-    {
-        return $this->responseHeaders;
     }
 
     /**
@@ -71,29 +60,33 @@ class HttpClient
      *
      * @return string|null
      */
-    public function getHeader($name)
-    {
+    public function getHeader($name) {
         return isset($this->responseHeaders[$name]) ? $this->getHeaders()[$name] : null;
+    }
+
+    /**
+     * @return array
+     */
+    public function getHeaders() {
+        return $this->responseHeaders;
     }
 
     /**
      * @return string
      */
-    public function getBody()
-    {
+    public function getBody() {
         return $this->responseBody;
     }
 
     /**
-     * @param string $url
-     * @param string $method
-     * @param string|null   $body
+     * @param string      $url
+     * @param string      $method
+     * @param string|null $body
      *
      * @return mixed|null
      * @throws Exception
      */
-    public function send($url, $method = 'GET', $body = null)
-    {
+    public function send($url, $method = 'GET', $body = null) {
         $this->requestHeaders = array();
 
         if ($this->token) {
@@ -107,7 +100,7 @@ class HttpClient
         $this->responseCode = 500;
         $this->responseHeaders = array();
         $this->responseBody = null;
-        
+
         $options = array(
             'http' => array(
                 'ignore_errors' => true,
@@ -133,7 +126,7 @@ class HttpClient
         foreach ($this->requestHeaders as $name => $value) {
             $options['http']['header'] .= $name.': '.$value."\n";
         }
-        
+
         $context = stream_context_create($options);
         $stream = fopen($url, 'r', false, $context);
 
@@ -147,18 +140,27 @@ class HttpClient
         }
 
         if ($this->responseCode != 304 || $this->responseBody == null) {
-        
+
             $this->responseBody = json_decode(stream_get_contents($stream));
 
             if ($this->responseCode >= 400) {
-                throw new Exception($url.' returned error '.$this->responseCode.' ('.(isset($this->responseBody->message) ? $this->responseBody->message : '').')', $this->responseCode);
+                throw new Exception(
+                    $url.' returned error '.$this->responseCode.' ('.(isset($this->responseBody->message)
+                        ? $this->responseBody->message : '').')', $this->responseCode
+                );
             }
 
             if (isset($this->responseHeaders['ETag'])) { // write cache file
-                file_put_contents($cacheFilename, json_encode(array(
-                    'headers' => $this->responseHeaders,
-                    'body' => $this->responseBody
-                ), JSON_PRETTY_PRINT));
+                file_put_contents(
+                    $cacheFilename,
+                    json_encode(
+                        array(
+                            'headers' => $this->responseHeaders,
+                            'body' => $this->responseBody
+                        ),
+                        JSON_PRETTY_PRINT
+                    )
+                );
             }
 
             fclose($stream);
