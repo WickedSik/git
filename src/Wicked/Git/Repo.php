@@ -29,6 +29,17 @@ class Repo implements Gittable
                 $this->bare = false;
             }
         }
+
+        $this->detectCurrentBranch();
+    }
+
+    private function detectCurrentBranch() {
+        $branchtext = $this->exec('git status -b --porcelain');
+        list($line) = explode("\n", $branchtext);
+
+        $line = trim(trim($line, '#'));
+        $branches = explode('...', $line);
+        $this->setBranch($branches[0]);
     }
 
     private function exec($command)
