@@ -1,5 +1,5 @@
 <?php
 
-namespace Git;
+namespace Wicked\Git;
 
 class Exception extends \Exception {}

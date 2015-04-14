@@ -1,6 +1,6 @@
 <?php
 
-namespace Git;
+namespace Wicked\Git;
 
 /**
  * HTTP client to send/recieve JSON over HTTP requests
