@@ -617,6 +617,10 @@ class Repo implements Gittable {
         return $sha;
     }
 
+    public function push() {
+        $this->exec('git push origin ' . $this->branch);
+    }
+
     /**
      * @return array
      * @throws Exception
