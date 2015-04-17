@@ -20,6 +20,10 @@ class Repo implements Gittable {
      * @var string
      */
     private $branch = 'master';
+    /**
+     * @var bool
+     */
+    public $debug = false;
 
     /**
      * @param string $repoPath
@@ -59,6 +63,9 @@ class Repo implements Gittable {
     private function exec($command) {
         $cwd = getcwd();
         chdir($this->path);
+        if($this->debug) {
+            echo ':> calling[ ', $command, ']', PHP_EOL;
+        }
         $out = exec($command.' 2>&1', $output, $return);
         chdir($cwd);
         if ($return != 0) {
@@ -179,6 +186,7 @@ class Repo implements Gittable {
      */
     public function checkoutBranch($name) {
         $this->exec('git checkout ' . escapeshellarg($name));
+        $this->detectCurrentBranch();
     }
 
     /**
