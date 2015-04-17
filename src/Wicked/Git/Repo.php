@@ -607,7 +607,7 @@ class Repo implements Gittable {
      * @throws Exception
      */
     public function index() {
-        $index = $this->exec('git diff-index --cached refs/heads/'.$this->branch);
+        $index = $this->exec('git diff-index refs/heads/'.$this->branch);
         preg_match_all(
             '/^:[0-9]{6} [0-9]{6} [0-9a-f]{40} [0-9a-f]{40} ([ACDMRTUX])[0-9]{0,3}\t(.+)$/m',
             $index,
