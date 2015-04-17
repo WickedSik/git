@@ -242,6 +242,13 @@ class Repo implements Gittable {
         return explode("\n", trim($show));
     }
 
+    public function clean($includeUntrackedFiles = false) {
+        $this->exec('git checkout .');
+        if($includeUntrackedFiles) {
+            $this->exec('git clean -xfd');
+        }
+    }
+
     /**
      * @param string $sha
      *
