@@ -3,4 +3,5 @@
 *.png binary
 *.jpg binary
 *.gif binary
-
+*.phar binary
+*.ttf binary
