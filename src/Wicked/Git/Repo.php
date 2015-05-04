@@ -621,6 +621,14 @@ class Repo implements Gittable {
         $this->exec('git push origin ' . $this->branch);
     }
 
+    public function pull($args) {
+        $this->exec('git pull ' . $args);
+    }
+
+    public function fetch($args) {
+        $this->exec('git fetch ' . $args);
+    }
+
     /**
      * @return array
      * @throws Exception
