@@ -4,22 +4,26 @@ An OO wrapper for Git allowing use of a Git repo as if it were a filesystem or d
 
 Talks directly to a Git repo via the Git binary, does not require a working copy or writing files to disk so it also works with a bare repo.
 
-
 ## Installation
 
-Install via [Composer](http://getcomposer.org/), add a dependency on `peej/git` to your project's `composer.json` file.
+Install via [Composer](http://getcomposer.org/), add a dependency on `wickedsik/git` to your project's `composer.json` file.
 
     {
         "require": {
-            "peej/git": "1.0.*"
-        }
+            "wickedsik/git": "1.0.*"
+        },
+        "repositories": [
+            {
+                "type": "vcs",
+                "url": "https://github.com/WickedSik/git"
+            }
+        ]
     }
 
 
 ## Requirements
 
 A system with [git](http://git-scm.com/) installed, it is expected to be in the command path.
-
 
 ## Usage
 
@@ -44,3 +48,6 @@ A system with [git](http://git-scm.com/) installed, it is expected to be in the 
     // create a new commit
     $repo->save('commit message');
 
+## I am currently adding this
+
+Let us change a lot more!

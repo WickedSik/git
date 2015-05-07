@@ -2,15 +2,29 @@
 
 namespace Wicked\Git;
 
-class Diff implements \ArrayAccess
-{
+/**
+ * Class Diff
+ *
+ * @package Wicked\Git
+ */
+class Diff implements \ArrayAccess {
+    /**
+     * @var array
+     */
     public $diff;
 
-    public function __construct($diff)
-    {
+    /**
+     * @param array $diff
+     */
+    public function __construct($diff) {
         $this->diff = array();
         foreach ($diff as $filename => $patch) {
-            preg_match_all('#@@ -([0-9]+)(,[0-9]+)? \+([0-9]+)(,[0-9]+)? @@[^\n]*\n(.*)$#s', $patch, $matches, PREG_SET_ORDER);
+            preg_match_all(
+                '#@@ -([0-9]+)(,[0-9]+)? \+([0-9]+)(,[0-9]+)? @@[^\n]*\n(.*)$#s',
+                $patch,
+                $matches,
+                PREG_SET_ORDER
+            );
             foreach ($matches as $match) {
                 $fromA = $match[1];
                 $fromB = $match[3];
@@ -44,8 +58,11 @@ class Diff implements \ArrayAccess
         }
     }
 
-    public function offsetSet($offset, $value)
-    {
+    /**
+     * @param mixed $offset
+     * @param mixed $value
+     */
+    public function offsetSet($offset, $value) {
         if (is_null($offset)) {
             $this->diff[] = $value;
         } else {
@@ -53,18 +70,28 @@ class Diff implements \ArrayAccess
         }
     }
 
-    public function offsetExists($offset)
-    {
+    /**
+     * @param mixed $offset
+     *
+     * @return bool
+     */
+    public function offsetExists($offset) {
         return isset($this->diff[$offset]);
     }
 
-    public function offsetUnset($offset)
-    {
+    /**
+     * @param mixed $offset
+     */
+    public function offsetUnset($offset) {
         unset($this->diff[$offset]);
     }
 
-    public function offsetGet($offset)
-    {
+    /**
+     * @param mixed $offset
+     *
+     * @return null
+     */
+    public function offsetGet($offset) {
         return isset($this->diff[$offset]) ? $this->diff[$offset] : null;
     }
 }

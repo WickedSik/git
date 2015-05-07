@@ -2,76 +2,138 @@
 
 namespace Wicked\Git;
 
-class GitHub implements Gittable
-{
+/**
+ * Class GitHub
+ *
+ * @package Wicked\Git
+ */
+class GitHub implements Gittable {
+    /**
+     * @var string
+     */
     private $baseUrl = 'https://api.github.com';
+    /**
+     * @var
+     */
     private $owner;
+    /**
+     * @var
+     */
     private $repo;
+    /**
+     * @var null|HttpClient
+     */
     private $httpClient;
+    /**
+     * @var string
+     */
     private $branch = 'master';
 
+    /**
+     * @var array
+     */
     private $index = array();
 
-    public function __construct($owner, $repo, $httpClient = null)
-    {
+    /**
+     * @param      $owner
+     * @param      $repo
+     * @param null $httpClient
+     */
+    public function __construct($owner, $repo, $httpClient = null) {
         $this->owner = $owner;
         $this->repo = $repo;
         $this->httpClient = $httpClient ? $httpClient : new HttpClient();
     }
 
-    public function exec($url, $method = 'GET', $data = null)
-    {
+    /**
+     * @param str $reference
+     *
+     * @return mixed|null|str
+     */
+    public function dereference($reference) {
+        if (substr($reference, 0, 5) == 'refs/') {
+            $reference = $this->exec('/git/'.$reference, 'GET');
+        }
+
+        return $reference;
+    }
+
+    /**
+     * @param        $url
+     * @param string $method
+     * @param null   $data
+     *
+     * @return mixed|null
+     * @throws Exception
+     */
+    public function exec($url, $method = 'GET', $data = null) {
         $url = $this->baseUrl.'/repos/'.$this->owner.'/'.$this->repo.$url;
         #var_dump($url, $method, $data);
 
         $response = $this->httpClient->send($url, $method, $data);
+
         #var_dump($response);
         return $response;
     }
 
-    public function dereference($reference)
-    {
-        if (substr($reference, 0, 5) == 'refs/') {
-            $reference = $this->exec('/git/'.$reference, 'GET');
-        }
-        return $reference;
-    }
-
-    public function setBranch($name = 'master')
-    {
+    /**
+     * @param string $name
+     */
+    public function setBranch($name = 'master') {
         $this->branch = $name;
     }
-    
+
+    /**
+     * @param $name
+     */
     public function createBranch($name) {
         try {
             $this->exec('/git/refs/heads/'.$name, 'GET');
         } catch (Exception $e) {
             if ($e->getCode() == 404) {
                 $ref = $this->exec('/git/refs/heads/'.$this->branch);
-                $this->exec('/git/refs', 'POST', array(
-                    'ref' => 'refs/heads/'.$name,
-                    'sha' => $ref->object->sha
-                ));
+                $this->exec(
+                    '/git/refs',
+                    'POST',
+                    array(
+                        'ref' => 'refs/heads/'.$name,
+                        'sha' => $ref->object->sha
+                    )
+                );
             }
         }
     }
 
+    /**
+     * @param      $name
+     * @param null $mustBeMerged
+     */
     public function deleteBranch($name, $mustBeMerged = null) {
         $this->exec('/git/refs/heads/'.$name, 'DELETE');
     }
 
     # plumbing
 
+    /**
+     * @param str $sha
+     *
+     * @return string
+     */
     public function catFile($sha) {
         $blob = $this->exec('/git/blobs/'.$sha);
         if ($blob->encoding == 'base64') {
             return base64_decode($blob->content);
         }
+
         return $blob->content;
     }
 
-    public function loadTree($sha)
-    {
+    /**
+     * @param str $sha
+     *
+     * @return array
+     */
+    public function loadTree($sha) {
         $entries = array();
         $treeData = $this->exec('/git/trees/'.$sha);
         foreach ($treeData->tree as $entry) {
@@ -84,44 +146,64 @@ class GitHub implements Gittable
                     break;
             }
         }
+
         return $entries;
     }
 
-    public function log($filename)
-    {
+    /**
+     * @param str $filename
+     *
+     * @return array
+     */
+    public function log($filename) {
         $shas = array();
-        foreach($this->exec('/commits?path='.urlencode($filename)) as $commit) {
+        foreach ($this->exec('/commits?path='.urlencode($filename)) as $commit) {
             $shas[] = $commit->sha;
         }
+
         return $shas;
     }
 
-    public function files($sha)
-    {
+    /**
+     * @param str $sha
+     *
+     * @return array
+     * @throws Exception
+     */
+    public function files($sha) {
         $commit = $this->exec('/commits/'.$sha);
         if (!$commit) {
             throw new Exception('Log for commit "'.$sha.'"" not found');
         }
         $files = array();
-        foreach($commit->files as $file) {
+        foreach ($commit->files as $file) {
             $files[] = $file->filename;
         }
+
         return $files;
     }
-    
-    public function commitMetadata($sha)
-    {
+
+    /**
+     * @param str $sha
+     *
+     * @return Metadata
+     * @throws Exception
+     */
+    public function commitMetadata($sha) {
         $commit = $this->exec('/commits/'.$sha);
         if (!$commit) {
             throw new Exception('Log for commit "'.$sha.'"" not found');
         }
 
-        $parents = array_map(function ($parent) {
-            return $parent->sha;
-        }, $commit->parents);
+        $parents = array_map(
+            function ($parent) {
+                return $parent->sha;
+            },
+            $commit->parents
+        );
 
         $diff = array();
-        foreach($commit->files as $file) {
+        foreach ($commit->files as $file) {
             $diff[$file->filename] = $file->patch;
         }
 
@@ -138,6 +220,121 @@ class GitHub implements Gittable
 
     # read
 
+    /**
+     * @param null $sha
+     * @param int  $number
+     *
+     * @return array
+     */
+    public function commits($sha = null, $number = 20) {
+        $commits = array();
+        if (!$sha) {
+            $ref = $this->exec('/git/refs/heads/'.$this->branch);
+            $sha = $ref->object->sha;
+        }
+
+        $commit = new Commit($this, $sha);
+        $commits[] = $commit;
+
+        foreach ($commit->parents as $parent) {
+            if (count($commits) >= $number) {
+                break;
+            }
+            $commits = array_merge($commits, $this->commits($parent, $number));
+        }
+
+        return $commits;
+    }
+
+    /**
+     * @param null $sha
+     *
+     * @return Commit
+     */
+    public function commit($sha = null) {
+        if (!$sha) {
+            $ref = $this->exec('/git/refs/heads/'.$this->branch);
+            $sha = $ref->object->sha;
+        }
+        $commit = new Commit($this, $sha);
+
+        return $commit;
+    }
+
+    /**
+     * @param str  $filename
+     * @param str  $content
+     * @param null $commitMessage
+     *
+     * @return bool
+     */
+    public function update($filename, $content, $commitMessage = null) {
+        return $this->add($filename, $content, $commitMessage);
+    }
+
+    /**
+     * @param str  $filename
+     * @param str  $content
+     * @param null $commitMessage
+     *
+     * @return bool
+     */
+    public function add($filename, $content, $commitMessage = null) {
+        $add = $this->exec(
+            '/git/blobs',
+            'POST',
+            array(
+                'content' => base64_encode($content),
+                'encoding' => 'base64'
+            )
+        );
+        $this->addToIndex($filename, $add->sha);
+        if ($commitMessage) {
+            return $this->save($commitMessage);
+        }
+
+        return true;
+    }
+
+    /**
+     * @param      $path
+     * @param null $sha
+     */
+    private function addToIndex($path, $sha = null) {
+        if ($sha) {
+            try {
+                $this->file($path);
+                $this->index[$path] = (object)array('operation' => 'M', 'sha' => $sha);
+            } catch (Exception $e) {
+                $this->index[$path] = (object)array('operation' => 'A', 'sha' => $sha);
+            }
+        } else {
+            $this->index[$path] = (object)array('operation' => 'D');
+        }
+    }
+
+    # write
+
+    /**
+     * @param str $filename
+     *
+     * @return null
+     * @throws Exception
+     */
+    public function file($filename) {
+        $tree = $this->tree(dirname($filename));
+        if (isset($tree[basename($filename)])) {
+            return $tree[basename($filename)];
+        }
+        throw new Exception('File "'.$filename.'" not found');
+    }
+
+    /**
+     * @param string $path
+     *
+     * @return null|Tree
+     * @throws Exception
+     */
     public function tree($path = '.') {
         if ($path == '.' || $path == '') {
             $ref = $this->exec('/git/refs/heads/'.$this->branch);
@@ -164,119 +361,46 @@ class GitHub implements Gittable
                 }
             }
         }
+
         return $tree;
     }
 
-    public function commits($sha = null, $number = 20)
-    {
-        $commits = array();
-        if (!$sha) {
-            $ref = $this->exec('/git/refs/heads/'.$this->branch);
-            $sha = $ref->object->sha;
-        }
-        
-        $commit = new Commit($this, $sha);
-        $commits[] = $commit;
+    /**
+     * @param $commitMessage
+     *
+     * @return mixed
+     */
+    public function save($commitMessage) {
+        $tree = $this->buildTree();
+        $head = $this->exec('/git/refs/heads/'.$this->branch);
+        $commit = $this->exec(
+            '/git/commits',
+            'POST',
+            array(
+                'message' => $commitMessage,
+                'tree' => $tree->sha,
+                'parents' => array($head->object->sha)
+            )
+        );
+        $this->exec(
+            '/git/refs/heads/'.$this->branch,
+            'PATCH',
+            array(
+                'sha' => $commit->sha
+            )
+        );
+        $this->emptyIndex();
 
-        foreach ($commit->parents as $parent) {
-            if (count($commits) >= $number) break;
-            $commits = array_merge($commits, $this->commits($parent, $number));
-        }
-        
-        return $commits;
+        return $commit->sha;
     }
 
-    public function commit($sha = null)
-    {
-        if (!$sha) {
-            $ref = $this->exec('/git/refs/heads/'.$this->branch);
-            $sha = $ref->object->sha;
-        }
-        $commit = new Commit($this, $sha);
-        return $commit;
-    }
-    
-    public function file($filename)
-    {
-        $tree = $this->tree(dirname($filename));
-        if (isset($tree[basename($filename)])) {
-            return $tree[basename($filename)];
-        }
-        throw new Exception('File "'.$filename.'" not found');
-    }
-
-    public function index() {
-        return $this->index;
-    }
-
-    # write
-
-    private function addToIndex($path, $sha = null)
-    {
-        if ($sha) {
-            try {
-                $this->file($path);
-                $this->index[$path] = (object)array('operation' => 'M', 'sha' => $sha);
-            } catch (Exception $e) {
-                $this->index[$path] = (object)array('operation' => 'A', 'sha' => $sha);
-            }
-        } else {
-            $this->index[$path] = (object)array('operation' => 'D');
-        }
-    }
-
-    private function removeFromIndex($path)
-    {
-        unset($this->index[$path]);
-    }
-
-    private function emptyIndex()
-    {
-        $this->index = array();
-    }
-
-    public function add($filename, $content, $commitMessage = null)
-    {
-        $add = $this->exec('/git/blobs', 'POST', array(
-            'content' => base64_encode($content),
-            'encoding' => 'base64'
-        ));
-        $this->addToIndex($filename, $add->sha);
-        if ($commitMessage) {
-            return $this->save($commitMessage);
-        }
-        return true;
-    }
-
-    public function update($filename, $content, $commitMessage = null) {
-        return $this->add($filename, $content, $commitMessage);
-    }
-
-    public function move($from, $to, $commitMessage = null) {
-        if ($this->copy($from, $to) && $this->remove($from) && $commitMessage) {
-            return $this->save($commitMessage);
-        }
-        return true;
-    }
-
-    public function copy($from, $to, $commitMessage = null) {
-        $this->add($to, $this->file($from));
-        if ($commitMessage) {
-            return $this->save($commitMessage);
-        }
-        return true;
-    }
-
-    public function remove($filename, $commitMessage = null) {
-        $this->addToIndex($filename);
-        if ($commitMessage) {
-            return $this->save($commitMessage);
-        }
-        return true;
-    }
-
-    private function buildTree($path = '.')
-    {
+    /**
+     * @param string $path
+     *
+     * @return mixed|null
+     * @throws Exception
+     */
+    private function buildTree($path = '.') {
         $tree = $this->tree($path);
         $nodes = array();
         foreach ($tree as $node) {
@@ -339,25 +463,82 @@ class GitHub implements Gittable
                 }
             }
         }
-        return $this->exec('/git/trees', 'POST', array(
-            'tree' => $nodes
-        ));
+
+        return $this->exec(
+            '/git/trees',
+            'POST',
+            array(
+                'tree' => $nodes
+            )
+        );
     }
-    
-    public function save($commitMessage)
-    {
-        $tree = $this->buildTree();
-        $head = $this->exec('/git/refs/heads/'.$this->branch);
-        $commit = $this->exec('/git/commits', 'POST', array(
-            'message' => $commitMessage,
-            'tree' => $tree->sha,
-            'parents' => array($head->object->sha)
-        ));
-        $this->exec('/git/refs/heads/'.$this->branch, 'PATCH', array(
-            'sha' => $commit->sha
-        ));
-        $this->emptyIndex();
-        return $commit->sha;
+
+    /**
+     * @return array
+     */
+    public function index() {
+        return $this->index;
+    }
+
+    /**
+     * @param $path
+     */
+    private function removeFromIndex($path) {
+        unset($this->index[$path]);
+    }
+
+    /**
+     *
+     */
+    private function emptyIndex() {
+        $this->index = array();
+    }
+
+    /**
+     * @param str  $from
+     * @param str  $to
+     * @param null $commitMessage
+     *
+     * @return bool
+     */
+    public function move($from, $to, $commitMessage = null) {
+        if ($this->copy($from, $to) && $this->remove($from) && $commitMessage) {
+            return $this->save($commitMessage);
+        }
+
+        return true;
+    }
+
+    /**
+     * @param str  $from
+     * @param str  $to
+     * @param null $commitMessage
+     *
+     * @return bool
+     * @throws Exception
+     */
+    public function copy($from, $to, $commitMessage = null) {
+        $this->add($to, $this->file($from));
+        if ($commitMessage) {
+            return $this->save($commitMessage);
+        }
+
+        return true;
+    }
+
+    /**
+     * @param str  $filename
+     * @param null $commitMessage
+     *
+     * @return bool
+     */
+    public function remove($filename, $commitMessage = null) {
+        $this->addToIndex($filename);
+        if ($commitMessage) {
+            return $this->save($commitMessage);
+        }
+
+        return true;
     }
 
 }

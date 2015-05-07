@@ -7,12 +7,18 @@ Talks directly to a Git repo via the Git binary, does not require a working copy
 
 ## Installation
 
-Install via [Composer](http://getcomposer.org/), add a dependency on `peej/git` to your project's `composer.json` file.
+Install via [Composer](http://getcomposer.org/), add a dependency on `wickedsik/git` to your project's `composer.json` file.
 
     {
         "require": {
-            "peej/git": "1.0.*"
-        }
+            "wickedsik/git": "1.0.*"
+        },
+        "repositories": [
+            {
+                "type": "vcs",
+                "url": "https://github.com/WickedSik/git"
+            }
+        ]
     }
 
 
