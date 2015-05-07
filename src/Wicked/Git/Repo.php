@@ -239,6 +239,16 @@ class Repo implements Gittable {
     }
 
     /**
+     * @param string $term
+     * @return string[]
+     * @throws Exception
+     */
+    public function searchLog($term) {
+        $log = $this->exec('git log --format=oneline --grep=' . $term);
+        return explode(PHP_EOL, $log);
+    }
+
+    /**
      * @param string $sha
      *
      * @return array
