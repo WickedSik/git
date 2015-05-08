@@ -5,6 +5,7 @@ namespace Wicked\Git;
 /**
  * Class Commit
  *
+ * @property array|mixed|Tree parents
  * @package Wicked\Git
  * @member  Tree $tree
  * @member  array $files

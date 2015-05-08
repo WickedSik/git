@@ -20,18 +20,21 @@ class Repo implements Gittable {
      * @var string
      */
     private $branch = 'master';
-    /**
-     * @var bool
-     */
-    public $debug = false;
+    /** @var LogInterface */
+    public $logger;
 
     /**
      * @param string $repoPath
      *
+     * @param LogInterface $logger
      * @throws Exception
      */
-    public function __construct($repoPath) {
+    public function __construct($repoPath, LogInterface $logger = null) {
         $this->path = $repoPath;
+
+        if(isset($logger)) {
+            $this->logger = $logger;
+        }
 
         if (!file_exists($this->path)) {
             if (substr($this->path, -4) != '.git') {
@@ -63,13 +66,21 @@ class Repo implements Gittable {
     private function exec($command) {
         $cwd = getcwd();
         chdir($this->path);
-        if($this->debug) {
-            echo ':> calling[ ', $command, ']', PHP_EOL;
+
+        if($this->logger) {
+            $this->logger->start(__METHOD__);
+            $this->logger->log(':> calling[ %s]', $command);
         }
+
         $out = exec($command.' 2>&1', $output, $return);
         chdir($cwd);
         if ($return != 0) {
             throw new Exception('Git binary returned an error "'.$out.'"');
+        }
+
+        if($this->logger) {
+            $this->logger->dump('output', $output);
+            $this->logger->end(__METHOD__);
         }
 
         return join("\n", $output);
