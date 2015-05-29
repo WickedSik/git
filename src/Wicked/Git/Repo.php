@@ -719,4 +719,12 @@ class Repo implements Gittable {
 
         return true;
     }
+
+    public function stash() {
+        $this->exec('git stash');
+    }
+
+    public function unstash() {
+        $this->exec('git stash pop');
+    }
 }
