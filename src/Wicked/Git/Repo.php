@@ -619,7 +619,7 @@ class Repo implements Gittable {
             $commitMessage = 'Merge '.$branch.' into '.$this->branch;
         }
 
-        $cmd = sprintf('git merge -n --log -m "%s" %s', $commitMessage, $branch);
+        $cmd = sprintf('git merge --no-ff -n --log -m "%s" %s', $commitMessage, $branch);
 
         $data = $this->exec($cmd);
         var_dump($data);
