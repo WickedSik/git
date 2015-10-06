@@ -620,11 +620,7 @@ class Repo implements Gittable {
         }
 
         $cmd = sprintf('git merge --no-ff -n --log -m "%s" %s', $commitMessage, $branch);
-
-        $data = $this->exec($cmd);
-        var_dump($data);
-
-        return $sha = null;
+        $this->exec($cmd);
     }
 
     public function push() {
