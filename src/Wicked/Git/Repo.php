@@ -612,30 +612,19 @@ class Repo implements Gittable {
         if ($this->index()) {
             throw new Exception('Can not merge with dirty index');
         }
-        $parent1Sha = $this->dereference($this->branch);
-        $parent2Sha = $this->dereference($branch);
 
-        $this->canMerge($branch);
+        #$this->canMerge($branch);
 
         if (!$commitMessage) {
             $commitMessage = 'Merge '.$branch.' into '.$this->branch;
         }
 
-        $baseSha = $this->exec('git merge-base '.escapeshellarg($this->branch).' '.escapeshellarg($branch));
-        $this->exec(
-            'git read-tree -m -i '.escapeshellarg($baseSha).' '.escapeshellarg($this->branch).' '.escapeshellarg(
-                $branch
-            )
-        );
-        $sha = $this->exec('git write-tree');
+        $cmd = sprintf('git merge -n --log -m "%s" %s', $commitMessage, $branch);
 
-        $sha = $this->exec(
-            'echo '.escapeshellarg($commitMessage).' | git commit-tree -p '.$parent1Sha.' -p '.$parent2Sha.' '.$sha
-        );
+        $data = $this->exec($cmd);
+        var_dump($data);
 
-        $this->exec('git update-ref '.escapeshellarg('refs/heads/'.$this->branch).' '.escapeshellarg($sha));
-
-        return $sha;
+        return $sha = null;
     }
 
     public function push() {
